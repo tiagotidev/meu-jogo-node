@@ -1,60 +1,79 @@
 const express = require('express');
-const cors = require('cors');
-const fs = require('fs'); // Módulo nativo para lidar com arquivos
-const app = express();
+const fs = require('fs');
 const path = require('path');
+const app = express();
 
-// Faz o Express entender que os arquivos estão na mesma pasta
-app.use(express.static(__dirname)); 
+const SAVE_FILE = './save.json';
 
-// Rota principal que entrega o seu index.html
+// --- LÓGICA DE PERSISTÊNCIA (SAVE SYSTEM) ---
+function carregarDados() {
+    if (!fs.existsSync(SAVE_FILE)) {
+        return { xp: 0, era: "Idade da Pedra", vida: 100 };
+    }
+    const data = fs.readFileSync(SAVE_FILE);
+    return JSON.parse(data);
+}
+
+function salvarDados(dados) {
+    fs.writeFileSync(SAVE_FILE, JSON.stringify(dados, null, 2));
+}
+
+// --- CONFIGURAÇÃO DE ARQUIVOS ESTÁTICOS ---
+// Isso permite que o Node entregue o index.html e outros arquivos da pasta
+app.use(express.static(__dirname));
+
+// Rota principal: Quando alguém acessar o seu link do Render, ele abre o jogo
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.use(cors());
+// --- ROTAS DO JOGO ---
 
-// Nome do nosso "mini banco de dados"
-const SAVE_FILE = 'save.json';
+// 1. Status atual
+app.get('/status', (req, res) => {
+    res.json(carregarDados());
+});
 
-// Função para carregar os dados salvos
-let playerStats = { xp: 0, era: "Idade da Pedra" };
-
-if (fs.existsSync(SAVE_FILE)) {
-    const data = fs.readFileSync(SAVE_FILE);
-    playerStats = JSON.parse(data);
-    console.log(">>> Progresso carregado com sucesso!");
-}
-
+// 2. Lutar (Ganha XP, perde vida)
 app.get('/lutar', (req, res) => {
-    playerStats.xp += 50;
+    let dados = carregarDados();
+    
+    if (dados.vida > 0) {
+        dados.xp += 50;
+        dados.vida -= 15;
 
-    // Lógica de Evolução
-    if (playerStats.xp >= 150) playerStats.era = "Era Futurista";
-    else if (playerStats.xp >= 100) playerStats.era = "Idade Moderna";
-    else if (playerStats.xp >= 50) playerStats.era = "Idade do Ferro";
-
-    // SALVANDO NO ARQUIVO: Transformamos o objeto em texto e gravamos
-    fs.writeFileSync(SAVE_FILE, JSON.stringify(playerStats));
-
-    res.json(playerStats);
+        // Lógica de Evolução de Era
+        if (dados.xp >= 500) dados.era = "Idade do Bronze";
+        if (dados.xp >= 1500) dados.era = "Idade Média";
+        if (dados.xp >= 3000) dados.era = "Era Moderna";
+        
+        if (dados.vida < 0) dados.vida = 0;
+        salvarDados(dados);
+    }
+    res.json(dados);
 });
 
-// Rota para resetar o jogo (Útil para testes!)
+// 3. Descansar (Recupera vida)
+app.get('/descansar', (req, res) => {
+    let dados = carregarDados();
+    if (dados.vida < 100) {
+        dados.vida += 20;
+        if (dados.vida > 100) dados.vida = 100;
+        salvarDados(dados);
+    }
+    res.json(dados);
+});
+
+// 4. Resetar o Jogo
 app.get('/reset', (req, res) => {
-    playerStats = { xp: 0, era: "Idade da Pedra" };
-    fs.writeFileSync(SAVE_FILE, JSON.stringify(playerStats));
-    res.json(playerStats);
+    const novoSave = { xp: 0, era: "Idade da Pedra", vida: 100 };
+    salvarDados(novoSave);
+    res.json(novoSave);
 });
 
+// --- INICIALIZAÇÃO DO SERVIDOR ---
+// IMPORTANTE: process.env.PORT é obrigatório para o Render funcionar!
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-
-// Adicione isso no seu server.js
-app.get('/status', (req, res) => {
-    res.json(playerStats); // Só devolve o XP e a Era atual
 });

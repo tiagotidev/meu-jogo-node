@@ -1,113 +1,67 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
-    <title>Age of War - Sistema de Save</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age of War - Simulador</title>
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            text-align: center;
-            padding-top: 50px;
-            background-color: #f4f7f6;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            display: inline-block;
-            min-width: 300px;
-        }
-
-        /* Botão de Atacar */
-        .btn-atacar {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            transition: 0.3s;
-        }
-
-        .btn-atacar:hover {
-            background: #218838;
-            transform: scale(1.05);
-        }
-
-        /* Botão de Reset */
-        .btn-reset {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            opacity: 0.8;
-            transition: 0.3s;
-        }
-
-        .btn-reset:hover {
-            opacity: 1;
-            background: #c82333;
-        }
-
-        .status {
-            font-weight: bold;
-            color: #007bff;
-            font-size: 1.2rem;
-        }
-
-        .xp-label {
-            color: #666;
-        }
+        body { font-family: sans-serif; text-align: center; background: #222; color: white; padding-top: 50px; }
+        .painel { background: #333; padding: 20px; border-radius: 10px; display: inline-block; min-width: 300px; }
+        .status { font-size: 1.2rem; margin: 10px 0; }
+        button { padding: 10px 20px; font-size: 1rem; cursor: pointer; margin: 5px; border: none; border-radius: 5px; }
+        .btn-lutar { background: #ff4757; color: white; }
+        .btn-curar { background: #2ed573; color: white; }
+        .btn-reset { background: #ffa502; color: white; }
     </style>
 </head>
-
 <body>
 
-    <div class="card">
-        <h1> Age of War Sim</h1>
-        <p>Era Atual: <span id="eraDisplay" class="status">Carregando...</span></p>
-        <p class="xp-label">Experiência acumulada: <span id="xpDisplay">0</span> XP</p>
+    <h1>Age of War - Evolução</h1>
 
-        <button id="btnAtacar" class="btn-atacar">⚔️ ATACAR!</button>
-        <br>
-        <button id="btnReset" class="btn-reset">Reiniciar Progresso</button>
+    <div class="painel">
+        <div class="status">Era: <span id="era">Idade da Pedra</span></div>
+        <div class="status">XP: <span id="xp">0</span></div>
+        <div class="status">Vida: <span id="vida">100</span>%</div>
+        
+        <hr>
+
+        <button class="btn-lutar" onclick="acaoDoJogo('lutar')">Lutar (-15 Vida / +50 XP)</button>
+        <button class="btn-curar" onclick="acaoDoJogo('descansar')">Descansar (+20 Vida)</button>
+        <br><br>
+        <button class="btn-reset" id="btnReset">Resetar Save</button>
     </div>
 
     <script>
-        const eraTxt = document.getElementById('eraDisplay');
-        const xpTxt = document.getElementById('xpDisplay');
-
-        // Função Genérica para falar com o servidor
+        // Função principal que se comunica com o Servidor Node
         async function acaoDoJogo(tipo) {
-            // Se estiver no ar, usa o endereço do site, se estiver no PC, usa localhost
-            const urlBase = window.location.hostname === 'localhost'
-                ? 'http://localhost:3000'
-                : ''; // Vazio significa "mesmo endereço do site"
+            try {
+                // Usamos apenas /tipo para o Render entender que é no próprio servidor
+                const response = await fetch(`/${tipo}`);
+                const dados = await response.json();
 
-            const response = await fetch(`${urlBase}/${tipo}`);
-            // ... resto do seu código ...
+                // Atualiza a tela com os dados que vieram do servidor
+                document.getElementById('era').innerText = dados.era;
+                document.getElementById('xp').innerText = dados.xp;
+                document.getElementById('vida').innerText = dados.vida;
+
+                if(dados.vida <= 0) {
+                    alert("Você morreu! Resetando...");
+                    acaoDoJogo('reset');
+                }
+            } catch (error) {
+                console.error("Erro ao conectar com o servidor:", error);
+            }
         }
 
-        // Eventos dos botões
-        document.getElementById('btnAtacar').addEventListener('click', () => acaoDoJogo('lutar'));
+        // Evento para o botão de Reset
         document.getElementById('btnReset').addEventListener('click', () => {
-            if (confirm("Tem certeza que deseja apagar seu save?")) {
+            if (confirm("Tem certeza que deseja apagar seu progresso?")) {
                 acaoDoJogo('reset');
             }
         });
 
-        // Tenta carregar os dados assim que abrir a página (sem precisar clicar)
-        // Criamos uma rota simples de "status" ou apenas chamamos uma vez
-        window.onload = () => acaoDoJogo('status');; // Aqui usamos o 'lutar' apenas para pegar os dados atuais no load
+        // Carrega o status assim que a página abre
+        window.onload = () => acaoDoJogo('status');
     </script>
 </body>
-
 </html>

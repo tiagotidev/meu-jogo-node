@@ -2,6 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs'); // Módulo nativo para lidar com arquivos
 const app = express();
+const path = require('path');
+
+// Faz o Express entender que os arquivos estão na mesma pasta
+app.use(express.static(__dirname)); 
+
+// Rota principal que entrega o seu index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.use(cors());
 
@@ -38,7 +47,12 @@ app.get('/reset', (req, res) => {
     res.json(playerStats);
 });
 
-app.listen(3000, () => console.log("Servidor com Save System em: http://localhost:3000"));
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
+
 
 // Adicione isso no seu server.js
 app.get('/status', (req, res) => {

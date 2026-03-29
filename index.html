@@ -1,31 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Age of War - Sistema de Save</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f6; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: inline-block; min-width: 300px; }
-        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            padding-top: 50px;
+            background-color: #f4f7f6;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            min-width: 300px;
+        }
+
         /* Botão de Atacar */
-        .btn-atacar { background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; margin-bottom: 10px; transition: 0.3s; }
-        .btn-atacar:hover { background: #218838; transform: scale(1.05); }
+        .btn-atacar {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-atacar:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
 
         /* Botão de Reset */
-        .btn-reset { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; opacity: 0.8; transition: 0.3s; }
-        .btn-reset:hover { opacity: 1; background: #c82333; }
+        .btn-reset {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            transition: 0.3s;
+        }
 
-        .status { font-weight: bold; color: #007bff; font-size: 1.2rem; }
-        .xp-label { color: #666; }
+        .btn-reset:hover {
+            opacity: 1;
+            background: #c82333;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 1.2rem;
+        }
+
+        .xp-label {
+            color: #666;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="card">
         <h1> Age of War Sim</h1>
         <p>Era Atual: <span id="eraDisplay" class="status">Carregando...</span></p>
         <p class="xp-label">Experiência acumulada: <span id="xpDisplay">0</span> XP</p>
-        
+
         <button id="btnAtacar" class="btn-atacar">⚔️ ATACAR!</button>
         <br>
         <button id="btnReset" class="btn-reset">Reiniciar Progresso</button>
@@ -36,23 +86,20 @@
         const xpTxt = document.getElementById('xpDisplay');
 
         // Função Genérica para falar com o servidor
-        async function acaoDoJogo(caminho) {
-            try {
-                const resposta = await fetch(`http://localhost:3000/${caminho}`);
-                const dados = await resposta.json();
-                
-                // Atualiza a interface
-                xpTxt.innerText = dados.xp;
-                eraTxt.innerText = dados.era;
-            } catch (erro) {
-                alert("Opa! Verifique se o servidor Node está rodando no terminal.");
-            }
+        async function acaoDoJogo(tipo) {
+            // Se estiver no ar, usa o endereço do site, se estiver no PC, usa localhost
+            const urlBase = window.location.hostname === 'localhost'
+                ? 'http://localhost:3000'
+                : ''; // Vazio significa "mesmo endereço do site"
+
+            const response = await fetch(`${urlBase}/${tipo}`);
+            // ... resto do seu código ...
         }
 
         // Eventos dos botões
         document.getElementById('btnAtacar').addEventListener('click', () => acaoDoJogo('lutar'));
         document.getElementById('btnReset').addEventListener('click', () => {
-            if(confirm("Tem certeza que deseja apagar seu save?")) {
+            if (confirm("Tem certeza que deseja apagar seu save?")) {
                 acaoDoJogo('reset');
             }
         });
@@ -62,4 +109,5 @@
         window.onload = () => acaoDoJogo('status');; // Aqui usamos o 'lutar' apenas para pegar os dados atuais no load
     </script>
 </body>
+
 </html>

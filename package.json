@@ -1,0 +1,14 @@
+{
+  "name": "meu-jogo",
+  "version": "1.0.0",
+  "description": "Este é um projeto **Full Stack** simples criado para fins didáticos, simulando a lógica de evolução do clássico jogo \"Age of War\".",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
